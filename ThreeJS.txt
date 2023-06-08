@@ -1,0 +1,702 @@
+Scene:
+  to create a scene we use new THREE.Scene()
+
+==============================================================================================================================================
+
+FOG:
+  to create a fog : const fog = new THREE.FOG(color,near,far)
+
+=============================================================================================================================================================
+
+Mesh:
+  to create a Mesh we need to create two things
+  one is geometry which is the shape using THREE.BoxGeometry(1,1,1) the parameters is the dimensions
+  the second is material which is how the shape look like (light,color...)
+  using THREE.MeshBasicMaterial({color:0xff0000}) it takes an object as parameter
+  We can enable wireframe by add wireframe : true, to MeshBasicMaterial object
+When we create a Mesh or Camera ... we need to add it to the scene like this   scene.add(Mesh)
+
+==============================================================================================================================================
+
+Camera:
+  there are a lot of types of camera but the most logical one is PerspectiveCamera
+  we create a camera using  THREE.PerspectiveCamera(75,number/number,near,far)
+    the first parameter if FOV(field of view) and it is major by degrees
+    the second parameter is the aspect ratio which is the width of render divided on the height of the render
+    the third parameter is the near, any object closer than the near will not show up
+    the fourth parameter is the fat, any object farther than the far will not show up
+
+==============================================================================================================================================
+
+Renderer:
+  it render the scene from the camera point of view
+  result will drawn into a canvas which we can create(recommended) or let ThreeJs do it
+  we create it using new THREE.WebGLRenderer({canvas:canvas,}) (we select the canvas before)
+  to render the scene => renderer.render(scene,camera)
+
+==============================================================================================================================================
+
+To transform an object we can use the following properties : position, rotation, scale, quaternion
+  - position:
+      is vector3, we have a lot of methods available to use, some of these methods:
+        obj.position.length() => return the distance between the obj and the center if the scene
+        obj.position.distance(obj2) => return the distance between the obj and obj2
+        obj.position.normalize() => it will reduce the length until it become 1
+        obj.position.set(x,y,z)
+  - scale:
+      is vector3 also, it has a set() method and it works like scale in css
+  - rotation:
+      is Euler,is has x,y,z
+      if we want to do a half turn we user obj.rotation.x = Math*PI , full turn => 2*Math*PI... and so on
+      when we change the x for ex, it will change the Y axes then we will  get strange results
+      so we use the reorder() method, it takes a string as parameter like this
+      reorder("YXZ") (uppercase) this will change Y first then X
+  - quaternion:
+      it is like rotation but much complex, when we update the rotation the quaternion will
+      be updated and when we update the quaternion the rotation will be updated
+      so we can update the rotation and get the quaternion coordinates
+
+AxesHelper:
+  show the three axes,we can create it by using new THREE.AxesHelper(), it takes
+  optional parameter which is the width of the axes (like THREE.AxesHelper()) the default is 1
+
+Look at:
+  any Object3D instance have a lookAt() method which rotates the object so that
+  its -z faces the target you provided , NOTE: the target must be a vector3
+  ex : camera.lookAt(mesh.position)
+
+Group:
+  let say we have a complex object consists of many objects and we wand to do an action
+  to all these objects, we can put them in a Groupe like this:
+  const group = new THREE.Group(); group.add(obj1); group.add(obj2); group.add(obj3) ...
+  group.position.y = 2; group.scale.z = 1.5; group.rotate.x = 0.5;
+
+Animation:
+  to do an animation we use window.requestAnimationFrame(func)
+  and do whatever we want in func ex:
+    const func = () => {
+      .....
+      window.requestAnimationFrame(func)
+    }
+  cuz of  the difference between screens , the FPS will not be the same
+  to solve this problem we use a Clock which is a class in THREE like this ex:
+  const clock = new THREE.Clock();
+    const func = () => {
+      const elapsedTime = clock.getElapsedTime() // return how many *seconds* since the instantiation
+      mesh.rotation.x = elapsedTime;
+      window.requestAnimationFrame(func)
+    }
+
+==============================================================================================================================================
+
+Change the camera position by mouse :
+  window.addEventListener("mousemove", (e) => {
+    cursor.x = e.clientX / sizes.width - 0.5;  // will return a value between [-0.5,0.5]
+    cursor.y = e.clientY / sizes.height - 0.5; // will return a value between [-0.5,0.5]
+  })
+  to move the camera left and right / top and bottom :
+    const func = () => {
+      camera.position.x = cursor.x * 10; //multiply by 10 cuz the value i too small
+      camera.position.y = -cursor.y * 10;
+      camera.lookAt(mesh.position)
+      window.requestAnimationFrame(func)
+    }
+  to do a full rotate horizontally:
+    const func = () => {
+      // x and z for the rotate and y to look  up an down
+      camera.position.x = Math.sin(Math.PI * 2 * cursor.x) * 3
+      camera.position.z = Math.cos(Math.PI * 2 * cursor.x) * 3
+      // must be the same value in sin and cos
+      camera.position.y = cursor.y * 3
+      camera.lookAt(mesh.position)
+      window.requestAnimationFrame(func)
+    }
+
+==============================================================================================================================================
+
+Controls
+  there are many controls in three js ,every one has a use case
+  OrbitControls :
+    import path: 'three/examples/jsm/controls/OrbitControls'
+    const controls = new OrbitControls(camera,DomElement) // the Dom Element will be the reference
+    to change axes : controls.target.x = 2  , then controls.update()
+    to use damping : controls.enableDamping = true;
+    NOTE: we need to update the controls on each frame when enableDamping is true
+
+==============================================================================================================================================
+
+Pixel Ratio:
+ it is the number of physical pixel to one software pixel , it could be 1,2,3...
+ 1 is normal , 2 is good , 3 is enough , more than that will be to much
+ to get a better scene we set the pixel ratio to the device pixel ratio
+ like this : renderer.setPixelRatio(window.devicePixelRatio)
+ but when the device pixel ratio is to much, that will slows down our site, so we
+ need to set a limit like this: renderer.setPixelRatio(Math.min(window.devicePixelRatio,2))
+
+==============================================================================================================================================
+
+To  switch to full screen mood, in ex we will listen to double click:
+  window.addEventListener("dblclick", () => {
+      if (document.fullscreenElement) {
+          document.exitFullscreen()
+      } else {
+          canvas.requestFullscreen()
+      }
+  })
+
+==============================================================================================================================================
+
+Geometries :
+  there are a lot of geometries in three js ,every one has a use case
+  like BoxGeometry, CircleGeometry, LatheGeometry,
+  SphereGeometry, TorusGeometry, TubeGeometry, TextGeometry
+
+==============================================================================================================================================
+
+Segments :
+  if the segments equal 1 , the surface will consists of two triangles
+  if the segments equal 1 , the surface will consists of eight triangles and so on
+  in BoxGeometry the 4th,5th,6th parameters are widthSegments, heightSegments, depthSegments
+  so we can control this.
+
+==============================================================================================================================================
+
+Custom Geometry :
+  const geometry = new THREE.Geometry()
+  geometry.vertices.push(new THREE.Vector3(0,0,0))
+  geometry.vertices.push(new THREE.Vector3(0,1,0))
+  geometry.vertices.push(new THREE.Vector3(1,0,0))
+  geometry.faces.push(new THREE.Face3(0, 1, 2)) // 0,1,2 are index of vertices array
+  NOTE: faces and vertices are arrays
+
+==============================================================================================================================================
+
+To create a random geometries :
+  for (let i = 0; i < 50; i++) {
+    for (let j = 0; j < 3; j++) {
+        geometry.vertices.push(new THREE.Vector3(
+            (Math.random() - 0.5) * 5,
+            (Math.random() - 0.5) * 5,
+            (Math.random() - 0.5) * 5
+        ))
+    }
+    geometry.faces.push(new THREE.Face3(
+        i * 3,
+        (i * 3) + 1,
+        (i * 3) + 2
+    ))
+  }
+
+==============================================================================================================================================
+
+Float32Array :
+  it is native js typed (store float only),has one direction, fixed length array,
+  we can create it like this : const arr = new Float32Array(3) //pass the length
+  and add values like this Float32Array[0] = 0; Float32Array[1] = 5 ....
+  or pass the values directly : const arr = new Float32Array([0,1,4,6,8....])
+
+==============================================================================================================================================
+
+Buffer Geometry :
+  almost every built-in geometry has a buffer geometry version
+  it is much better for performance but is it less develope friendly
+  to create a buffer geometry we need  BufferAttribute and we can create it
+  like this const BudAtt = new THREE.BufferAttribute(Float32Array,length)
+  the length represents the number which the vertex consists of
+    lets say we have Float32Array like this:
+    [   0,0,0,       0,0,1,       1,0,0  ]
+      |Vertex 1|   |Vertex 2|   |Vertex 3|  // the length here is 3
+  then it is time to create buffer geometry like this:
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute("position",positionsAttribute)
+    NOTE: "position" is like an object key(must be "position")
+
+==============================================================================================================================================
+
+Debug UI:
+  there are a lot if debug libraries like : dat.GUI, control-panel, ControlKit, Guify, Oui
+  we will use dat.GUI
+  const gui = new dat.GUI()
+  there are different types of elements you  can add to that panel
+  - Range : for numbers with minimum and maximum value
+  - Color : for colors with various formats
+  - Text : for simple texts
+  - Checkbox : for booleans
+  = Select : for a chose from a list values
+  - Button : to trigger functions
+  - Folder : to organize your panel if you have too many elements
+  to tweak a property
+  gui.add(target/object/, property, minimum, maximum, step)
+  gui.add(mesh.position,   "y",      -3,       3,     0.01)
+  we could do it like this gui.add(mesh.position,   "y").min(-3).max(3).step(0.01).name("blabla") //.name() the name of the Range
+  the mesh is an instance of the Object3D  is has a visible property we can control is like this mesh.visible = false
+  and with the gui : gui.add(mesh /without property/, "visible") //will add Checkbox to control visibility
+  gui.add(material,"wireframe") // add Checkbox to control wireframe
+  and if we want to control specific object : gui.add(mesh.material,"wireframe")
+  to tweak color we have a specific method for that so js can recognize the color (not the string or hexadecimal number)
+  first we need to create an object to hold the data
+  const debugObj = {color:0xff0000 , spin:()=>{...}}
+  gui.addColor(debugObj //object name,'color' //key).onChange(()=>{material.color.set(debugObj.color)})
+  to add button that fire a function : gui.add(debugObj,'spin')
+  press h to hide the panel
+  if we want the panel to be hidden by default : gui.hide()
+  if we want the panel to be closed by default : const gui = new dat.GUI({closed:true})
+  we can set default width const gui = new dat.GUI({width:400})
+
+==============================================================================================================================================
+
+Textures:
+  textures are images that will cover the surface of the geometries, there are many types with many different effects
+  - Color: (most simple one)
+  - Alpha: white will be visible, black not visible
+  - Height: move the vertices to create some relife, need enough subdivision
+  - Normal: add details, doesn't need subdivision, lure the light about the face orientation,
+            the vertices wont move, better performance than adding the height texture with a lot of subdivision
+  - Ambient Occlusion: add fake shadows in crevices, not physically accurate, help to create contrast and see details
+  - Meatless: white is metallic, black is non-metallic, mostly for reflection
+  - Roughness: in duo with the Meatless, white is rough, black is smooth, mostly for light dissipation
+  How to load textures :
+    to load an image in js we have two ways:
+      put it in src folder and load it normally './imgName'
+      put it in static folder and load it (without 'static' in the path) /recommended/
+    first create an image with native js : const image = new Image();
+    then create init texture (so we don't have scope issues later) :
+      const texture = new  THREE.Texture(image) //even if the image not loaded
+    then add the src to image : image.src = './textures/door/color.jpg'
+    then add listener : image.onload = () => { texture.needsUpdate = true }
+    In the material we need to put map:texture : const material = new THREE.MeshBasicMaterial({map:texture})
+  TextureLoader : it is another way to load textures and it is three js class
+    const textureLoader = new THREE.TextureLoader()
+    const texture = textureLoader.load('./textures/door/color.jpg');
+    we can send 3 functions after the path:
+      - load: when the image loaded successfully
+      - progress: when the loading is progressing
+      - error: if something went wrong
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+UV unwrapping:
+  the texture is being stretched or squeezed in different ways to cover the geometry
+  this is called uv unwrapping  and it's linked unwrapping an origami or a candy wrap tp make it flat
+  each vertex will have a 2D coordinate on a flat plane (usually a square)
+  we can see those uv coordinates in geometry.attributes.uv
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+Transforming The Texture:
+  - Repeat:
+    we can repeat the texture bu using the repeat property, it's a Vector2 with x and y properties
+      colorTexture.repeat.x = 2;
+      colorTexture.repeat.y = 3;
+    like this it will show just one time, to do the repeat we use:
+      colorTexture.wrapS = THREE.RepeatWrapping
+      colorTexture.wrapT = THREE.RepeatWrapping
+    to do a mirrored repeating:
+      colorTexture.wrapS = THREE.MirroredRepeatWrapping
+      colorTexture.wrapT = THREE.MirroredRepeatWrapping
+  - Offset:
+      colorTexture.offset.x = 0.5
+      colorTexture.offset.y = 0.5
+  - Rotation:
+      colorTexture.rotation = Math.PI/4 (Rad)
+      by default the rotation occurs around the bottom left corner (that is the (0,0) uv coordinates)
+      we can change this pivot point with the center property which is a Vector2:
+        colorTexture.center.x = 0.5
+        colorTexture.center.y = 0.5
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+Filtering and Mip-Mapping:
+  mip-mapping is a technic that consists of creating hale a small version of a texture again and again
+  until we get a 1x1 texture, and those texture variations are sent to the GPU and the GPU will choose
+  the most appropriate version of the texture
+  all of this is already handled by ThreeJs and the GPU but we can choose different algorithms
+  there are tow types of filter algorithms
+  - Minification Filter:
+      happens when the pixels of the texture are smaller than the pixels of the render, in other world
+      the texture is too big for the surface it covers
+      we can change the minification filter of the texture using the minFilter property with those 6 values:
+        THREE.NearestFilter
+        THREE.LinearFilter
+        THREE.NearestMipMapNearestFilter
+        THREE.NearestMipMapLinearFilter
+        THREE.LinearMipMapNearestFilter
+        THREE.LinearMipMapLinearFilter (default)
+      actually the different is small the most different one is NearestFilter which give us a sharp result but it is glitchy
+  - Magnification Filter:
+      happens when the pixels of the texture are bigger than the pixels of the render, in other world
+      the texture is too small for the surface it covers
+      so if the texture is to small and we zoom in , it will be blurry , we can change the magnification filter of
+      the texture using the magFilter property with those 2 values:
+        THREE.NearestFilter
+        THREE.LinearFilter (default)
+  - Notes:
+      THREE.NearestFilter are cheaper than the other ones and if the result is fin , we should use it
+      if we are using THREE.NearestFilter on minFilter we don't need the mipmaps
+      we can deactivate the mipmaps generation with : texture.generateMipmaps = false
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+Texture Format And Optimization:
+  this three elements are crucial
+  - The Weight:
+      the users will have to download the texture so we need to choose the right type of file
+      - .jpg => lossy compression but usually lighter
+      - .png => lossless compression but usually heavier
+      we can use compression websites and softwares like TinyPNG
+
+  - The Size (resolution):
+      each pixel in the textures have to be stored in the GPU regardless of the image's weight
+      GPU has storage limitation
+      it is even worse because mipmaping increases the number of pixels to store
+      so we need to try to reduce the size of the image as much as possible
+      the mipmaping will produce a half smaller version of the texture repeatably until 1x1
+      because of that the texture width and height must be a power of 2 like 512x512, 1024x1024, 512x2048
+  - The Data:
+      texture support transparency but we can't have transparency in .jpg if we want to have only one texture that
+      combine color and alpha, we better use .png file
+      if we are using a normal texture we want to have the exact values which is why we shouldn't apply lossy compression
+      and we are using .png for those
+      sometimes we can combine different data into one texture by using the red,blue,green and alpha channels separately
+      but the difficulty is to find the right combination of texture formats and resolution
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+Where To Find Textures:
+  poliigon.com
+  3dtextures.me
+  arroway-textures.ch
+  we can create our own texture with photos and 2D softwares like photoshop or even procedural texture with Substance Designer
+
+==============================================================================================================================================
+
+LoadingManager:
+  it is three js class we can create it like this: const loadingManager = new THREE.LoadingManager();
+  we use it to trigger the loading process
+  it has 4 properties , onStart, onProgress, onLoad, onError
+  which we can assign to a callback like this loadingManager.onError = () => console.log('onError')
+
+==============================================================================================================================================
+
+Material:
+  we can pass property in the instantiation or by changing it:
+    const material = new THREE.MeshBasicMaterial({ map: texture })
+    or
+    const material = new THREE.MeshBasicMaterial(); material.map = texture
+  there are a lot of material we will talk about some of them:
+  - MeshBasicMaterial:
+      to change opacity or alphaMap we need to set transparent to true:
+        material.opacity = 0.5;
+        material.alphaMap = alphaTexture //white will be visible , black will not
+        material.transparent = true
+        material.side to control which side is visible , we have three options:
+        - THREE.FrontSide
+        - THREE.BackSide
+        - THREE.DoubleSide (not recommended cuz it needs more calculations)
+  - MeshNormalMaterial:
+      Normals can be used for lighting, reflection, refraction, ...ect
+      MeshNormalMaterial shares common properties with MeshBasicMaterial like wireframe, transform, opacity and side
+      but there is also a flatShading property which will flatten the faces, meaning that the normals won't be
+      interpolated between the vertices
+  - MeshMatcapMaterial:
+      MeshMatcapMaterial will display a color by using the normals as reference to pick the right color on
+      the texture that looks like a sphere
+      to set matcap texture we use the matcap property: material.matcap = matcapTexture
+      to find matcaps textures: https://github.com/nidorx/matcaps
+  - MeshDepthMaterial:
+      MeshDepthMaterial will simply color the geometry in white if it's close to the near value of the camera
+      and in black if it's close to the far
+  - MeshLambertMaterial
+      MeshLambertMaterial will react ot light, it's performant but we can see strange patterns on the geometry
+  - MeshPhongMaterial:
+      MeshPhongMaterial is similar to MeshPhongMaterial but the performant are less visible and is has also light reflection
+      we can control the light reflection with shininess
+      we can control the light reflection color like this: material.specular = new THREE.Color(0xff0000)
+  - MeshToonMaterial:
+      MeshPhongMaterial is similar to MeshPhongMaterial but with a cartoonish
+      to add more steps to the coloration we can use the gradientMap property and use the gradientTexture
+      by default we see a gradient instead of a clear separation because the gradient is small and
+      the magFilter tries to fix it with the mipmaping , we can set the magFilter and minFilter to THREE.NearestFilter
+      we can also deactivate the mipmaping with gradientTexture.generateMipmaps = false
+  - MeshStandardMaterial:
+      this is the most used one, MeshStandardMaterial uses(PBR), like MeshLambertMaterial it supports light but
+      with a more realistic algorithms and better parameters like:
+      - Roughness and Metalness:
+          we can change those like this: material.roughness = 0.45; material.metalness = 0.45;
+      - map:
+          allow to apply texture
+      - aoMap (Ambient Occlusion Map):
+          will add shadows where the texture is dark, must add a second set of UV named 'uv2'
+          in the case of if the coordinates is the same of the default UV , we can re-use it like this:
+          mesh.geometry.setAttribute('uv2',new THREE.BufferAttribute(mesh.geometry.attributes.uv.array,2))
+      - aoMapIntensity:
+          to control the intensity
+      - displacementMap:
+          will move the vertices to create relife (need a lot of subdivision)
+      - displacementScale
+          to reduce the displacementMap effect
+      - metalnessMap and roughnessMap:
+          instead of using uniform metalness and roughness for the whole geometry we can use the metalnessMap and roughnessMap and we
+          shouldn't combine metalness and roughness with metalnessMap and roughnessMap so that we will not gite a strange result
+      - normalMap:
+          will fake the normals orientation and add details on the surface regardless of the subdivision
+      - normalScale:
+          to change the normalMap intensity and it is Vector2
+      - alphaMap:
+          to control alpha (need to set the transparent to true)
+  - MeshPhysicalMaterial:
+      MeshPhysicalMaterial is the same as MeshStandardMaterial but with support of a clear coat effect
+  - PointMaterial:
+      it used with particles
+  - ShaderMaterial and RowShaderMaterial:
+      can both be used to create our own materials
+  Environment Map:
+    the environment map is an image of what's surrounding the scene it can be used for reflection or refraction but also
+    for general lighting environment, maps are supported by multiple materials but better to use MeshStandardMaterial
+    Three.js only supports cube environment maps
+    to load a cube texture we must use CubeTextureLoader instead of the TextureLoader
+    CubeTextureLoader.load() take an array of 6 paths (px -> nx -> py -> ny -> pz -> nz)
+    EnvironmentMapTexture = CubeTextureLoader.load("path","path","path","path","path","path")
+    to set the environment map : material.envMap = EnvironmentMapTexture
+    Where To Find Environment Maps ?
+    in HDRIHaven , hundreds of awesome HDRIs (High Dynamic Range Imaging) [not a cube map]
+    to convert HDRIs to cube maps: https://matheowis.github.io/HDRI-to-CubeMap/
+
+==============================================================================================================================================
+
+TextBufferGeometry:
+  to use TextBufferGeometry we must use a particular forn format called typeface
+  to convert af font to a typeface we could use tools like https://gero3.github.io/facetype.js/
+  we can also use the fonts provided by ThreeJs in this path /node_modules/three/examples/fonts/
+  we can load it directly or copy it to /static/fonts/ folder
+  to load a font (from static folder) we  need a fontLoader
+    const fontLoader = new THREE.FontLoader()
+    fontLoader.load(
+      "/fonts/helvetiker_regular.typeface.json",
+      (font) => {
+        const textGeometry = new THREE.TextBufferGeometry(
+          'Hello Three js',
+          {
+            font: font,
+            size: 0.5,
+            height: 0.3,
+            curveSegments: 6,
+            bevelEnabled: true,
+            bevelThickness: 0.03,
+            bevelSize: 0.02,
+            bevelOffset: 0,
+            bevelSegments: 5,
+          }
+        )
+        const textMaterial = new THREE.MeshBasicMaterial({wireframe:true})
+        const text = new THREE.Mesh(textGeometry, textMaterial)
+        scene.add(text)
+      }
+    )
+  - Bounding:
+      the bounding is an information associated with the geometry that tells what the space is taken by the geometry
+      it can be a box or a sphere, it helps three js calculate if the object is on the screen (frustum culling)
+      we can use the bounding measures to recenter the geometry
+      by default ThreeJs is using sphere bounding, to calculate the box bounding we use: geometry.computeBoundingBox()
+      after doing that we have access to geometry.boundingBox, if we don't, boundingBox will be null
+  - To center a text:
+      textGeometry.translate(
+        (-textGeometry.boundingBox.max.x - 0.02) * 0.5, // we subtracted the bevelSize to put the geometry in the exact center
+        (-textGeometry.boundingBox.max.y - 0.02) * 0.5, // we subtracted the bevelSize to put the geometry in the exact center
+        (-textGeometry.boundingBox.max.z - 0.03) * 0.5 // we subtracted the bevelThickness to put the geometry in the exact center
+      );
+      there are a simpler way to the exact same: textGeometry.center(); this is also depend on boundingBox
+
+==============================================================================================================================================
+
+Lights:
+  adding lights is as simple as adding mesh, we instantiate with the right class and add it to the scene
+  - Type Of Lights:
+    - AmbientLight:
+        const ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 ); first parameter is the color and second is intensity
+        we can also do this:
+        const ambientLight = new THREE.AmbientLight(); ambientLight.color = new THREE.color('#fff); ambientLight.intensity = 0.5;
+        the AmbientLight is a uniform light from all the directions, it used when we have a directional light and we wanna
+        mock the reflection of the light easily, the we do a lite AmbientLight on all directions
+    - DirectionalLight:
+        const directionalLight = new THREE.DirectionalLight(0x00fffc,0.3)
+        to change the direction: directionalLight.position.set(5,0.25,0)
+        the distance doesn't matter now, it is the same on every value (infinity light)
+    - HemisphereLight
+      const hemisphereLight = new THREE.HemisphereLight(0xff0000, 0x000ff, 1)
+      the first color will be from the top of the scene, the second will be from the bottom, and the sides will be mix of those two
+      it is like ambientLight (uniform light from all the directions)
+    - PointLight:
+        the PointLight is like a lighter, the light starts at an infinity small point an spreads uniformly in every directions
+        we can move it like this: pointLight.position.set(1,-0.5,0)
+        const pointLight = new THREE.PointLight(0xff9000, 0.5, 3,2), third parameter is the distance, so if it is 3 and an object
+        is 4 unite far from the light, the light will never effect the object, fourth parameter is the decay, it is control
+        how fast the light fades, by default the light intensity doesn't fade
+    - RectAreaLight:
+        it is mix of directional light and diffuse light
+        the RectAreaLight works only with MeshStandardMaterial and MeshPhysicalMaterial
+        we can move it by changing the position and rotate it easily be lookAt
+        const rectAreaLight = new THREE.RectAreaLight(0xff0000, 2, 5, 5), third parameter is the width and fourth is the height
+    - SpotLight
+        it is like a flashlight, it's a cone of light starting at a point and oriented in a direction
+        const spotLight = new THREE.SpotLight(0x78ff00, 0.6, 10, Math.PI * 0.1, 0.25, 1)
+        third parameter are distance, 4th are angle, 5th are penumbra (the edges are blurry or not), 6th are decay
+        to rotate the SpotLight, we need to add its target property to the scene and move it:
+          scene.add(spotLight.target); spotLight.target.position.x = -0.75;
+  - Performances:
+      lights can cost a lot when it comes to performances, so we need to try to add as few lights as possible
+      and try to use the light that cost lossless
+      - Minimal cost:
+        - AmbientLight
+        - HemisphereLight
+      - Moderate cost:
+        - DirectionalLight
+        - PointLight
+      - High cost:
+        - SpotLight
+        - RectAreaLight
+  - Baking:
+      the idea is to bake the light into the texture, this can be done in 3D software
+      the drawback is that we cannot move the light anymore and we have to load huge texture
+  - Helpers:
+      helpers is used to help positioning the light, we create it then add it to the scene
+      - HemisphereLight:
+          const hemisphereLightHelper = new THREE.HemisphereLightHelper(hemisphereLight, 0.2)
+      - DirectionalLightHelper:
+          const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight,0.2);
+      - PointLightHelper:
+          const pointLightHelper = new THREE.PointLightHelper(pointLight, 0.2)
+      - for all above the first parameter is the target light, second is the size
+      - SpotLightHelper: const spotLightHelper = new THREE.SpotLightHelper(spotLight); //we don't have size here
+      - RectAreaLightHelper:
+          RectAreaLightHelper doesn't exist in the THREE object, so we need to import it like this:
+            import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper'
+          const rectAreaLightHelper = new RectAreaLightHelper(rectAreaLight)
+          we need to provide a position and rotation to RectAreaLightHelper in the next frame like this:
+            window.requestAnimationFrame(() => {
+              rectAreaLightHelper.position.copy(rectAreaLight.position) //easy way to copy an Object3 position to another
+              rectAreaLightHelper.quaternion.copy(rectAreaLight.quaternion) ////easy way to copy an Object3 rotation to another
+            });
+
+==============================================================================================================================================
+
+Shadows:
+  when we do a render, ThreeJs will do a render for each light supporting the shadows, those renders will simulate the light
+  sees if it was a camera, during these renders, a MeshDepthMaterial replaces all meshes material
+  the light renders are stored as texture and we call those shadow maps, those shadow maps are then used on every materials
+  supposed to receive shadows and projected on the geometry
+  - activate the shadow maps:
+      - on the renderer: renderer.shadowMap.enabled = true
+      - we need to go through each object and decide if it can cast a shadow with castShadow: mesh.castShadow = true
+        and if it can receive shadow with receiveShadow: mesh.receiveShadow = true
+      - on the lights, only the following types of lights support shadows:
+        - pointLight
+        - directionalLight
+        - spotLight
+      - to activate the shadow we use: light.castShadow = true
+      - to optimize the shadow we can increase its size like this:
+          light.shadow.mapSize.width = 1024 //the number must be power of 2
+          light.shadow.mapSize.height = 1024 //the number must be power of 2
+  - Near and Far
+      we can use a CameraHelper with the camera used for the shadow map located in light.shadow.camera to help us debug line this:
+      const lightCameraHelper = new THREE.CameraHelper(light.shadow.camera); and add it to the scene
+      we can set the near and fat like this:
+        light.shadow.camera.near = 1
+        light.shadow.camera.far = 6
+  - Amplitude:
+      by default the amplitude (size of the scene) is too large, because when we are using the directionalLight, ThreeJs
+      is using an OrthographicCamera,if the amplitude is too large that will be bad for performance and details so we can control
+      how far on each side the camera can see with top,right,bottom and left like this:
+        light.shadow.camera.top = 2
+        light.shadow.camera.right = 2
+        light.shadow.camera.bottom = -2
+        light.shadow.camera.left = -2
+      the smallest the values, the more precise the shadow will be, but if it's too small, the shadows will be cropped
+  - Hide the camera:
+      we can hide the CameraHelper when we are done with it like this: lightCameraHelper.visible = false
+  - Blur:
+      we can control the shadow blue with the radius property: light.shadow.radius = 10
+      this technic doesn't use the proximity of the camera with the object, it's a general and cheap blur
+  - Shadow Map Algorithm:
+    - types of algorithms which can be applied to shadow maps:
+        - THREE.BasicShadowMap: very performant but lousy quality
+        - THREE.PCFShadowMap: Less performant but smoother edges (default)
+        - THREE.PCFSoftShadowMap: Less performant but even softer edges (recommended)
+        - THREE.VSMShadowMap: Less performant, more constraints, can have unexpected results
+    - we can apply an algorithm like this:
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap //Note: the radius doesn't work with THREE.PCFSoftShadowMap
+  - Notes:
+    - when using spotLight we can change the fov of the camera cuz it is a PerspectiveCamera
+    - when using pointLight ThreeJs will do a 6 renders, each one is a PerspectiveCamera in one of the 6 direction
+      and it finishes downward (so at the end we see the CameraHelper like a PerspectiveCamera looking downward)
+    - we can't change the fov of the pointLight CameraHelper cuz we will git strange results
+  - Baking Shadows:
+      we can bake the shadow on texture in 3D software, so we can get a better performance (but static scene)
+      there are two ways to bake shadow, one is to bake the shadow on the floor of the scene but this we be absolute static the
+      other way is to make a shadow that look like a shape, here we can control the position and other things so it is less static
+
+=============================================================================================================================================================
+
+Particles
+  - Particles can be used to create dust, stars, smoke, rain, fire, ect. we can have thousands of them with a reasonable frame rate
+    each particle composed of a plane (two triangles) always facing the camera
+  - creating particles:
+      it is like mesh, we need a geometry(BufferGeometry) and a material(PointMaterial) and Points instance (instead of mesh)
+      const particlesGeometry = new THREE.SphereBufferGeometry(1, 32, 32)
+      const particlesMaterial = new THREE.PointsMaterial({
+        size: 0.02, //size of the particles
+        sizeAttenuation:true, //to specify if distant particles should be smaller than close particles
+      })
+      const points = new THREE.Points(particlesGeometry, particlesMaterial)
+  - creating particles with custom geometry
+      first we need a BufferGeometry : const particlesGeometry = new THREE.BufferGeometry();
+      then we need to provide positions to this geometry with Float32Array
+        const positions = new Float32Array(count * 3);
+        for (let i = 0; i < count * 3; i++) {
+          positions[i] = (Math.random() - 0.5) *20;
+        }
+      now we have a 'count' random vertex
+      now we need to set the positions like this:
+        particlesGeometry.setAttribute(
+          'position',
+          new THREE.BufferAttribute(positions, 3)
+        );
+  - we can change the color of the particles (like any other material) and we can provide a color for each particle like this:
+      first we need a Float32Array sorting the colors then we fill it with a random numbers from 0 to 1 represents RGB
+        const colors = new Float32Array(count * 3);
+        for (let i = 0; i < count * 3; i++) {
+          colors[i] = Math.random()
+        }
+      and we need to set the vertexColor to true like this:
+  - we can also use the map property to put a texture, a cool websites to get particles textures
+      https://www.kenney.nl/assets/particle-pack
+  - when adding a lot of particles we will have a bug, the front particles will hide the back particles
+    to fix this bug we have multiple ways:
+    - activate the transparency and use the texture on the alphaMap property instead of map, when we do that we get a better result
+      but we still see edges of the particles, that is because the particles are drawn in the same order as they are created
+      and WebGL doesn't really know witch one is in front of the other there are multiple ways of fixing this:
+      - alphaTest:
+          The alphTest is a value between 0 and 1 that enables  the WebGL to know when not to render the pixel according to that
+          pixel transparency, by default the value is 0 meaning that the pixel will be rendered anyway, we can change is to 0.001:
+          material.alphaTest = 0.01
+      - depthTest:
+          When drowning, the WebGL tests if what's being drawn is closer than what's already drawn, That is called depth testing
+          and can be deactivated with alphaTest material.depthTest = false
+          but, deactivate the depth testing might create bugs if we have other objects in the scene or particles with different colors
+      - depthWrite:
+          the depth of what's being drawn is stored in what we call a depth buffer, instead of not testing if the particle is closer
+          than what's in this depth buffer, we can tell the WebGL not to write particles in that depth buffer with depthWrite
+          material.depthWrite = false
+      - Blending:
+          The WebGL currently draws pixels one on top of the other, with the Blending property we can tell the WebGL to add the color
+          of the pixel to the color of the pixel already drawn,
+          material.blending = THREE.AdditiveBlending
+          NOTE: This effect will impact the performances
+  - Animate the particles:
+      there are many ways to animate particles
+      - By using the points as an object:
+        Points class inherits from the Object3D so we can move, rotate and scale the points,that will control the whole particles
+      - By changing the attributes:
+          we can loop over the positions array and change the positions to create animation but this is a very
+          bad idea if the number of particles is large
+      - By using a custom shader

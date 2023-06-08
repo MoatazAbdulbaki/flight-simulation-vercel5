@@ -1,0 +1,62 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    color: white;
+    font-size: 20px;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+canvas {
+    width: 100%;
+    height: 100%;
+}
+.information {
+    position: absolute;
+    bottom: 0;
+    padding: 20px;
+    left: 0;
+    width: 400px;
+    height: 400px;
+    background-color: rgba(0, 0, 0, 0.8);
+    
+    display: none;
+    z-index: 999;
+}
+.information.show {
+    display: block;
+}
+div p {
+    margin: 5px 0;
+}
+div p span{
+    color: gold;
+    margin: 0 10px;
+}
+hr {
+    margin: 10px 0;
+}
+.info-note {
+    position: absolute;
+    top: 0;
+    left: 81px;
+    background-color:#0D0D2B;
+    max-width: 500px;
+    animation: showUp 0.3s 2s forwards, beHidden 0.5s 9s forwards;
+    
+    padding: 7px 30px;
+    opacity: 0;
+}
+@keyframes showUp {
+    100% {
+        opacity: 1;
+    }
+}
+@keyframes beHidden {
+    100% {
+        opacity: 0;
+    }
+}
